@@ -1,6 +1,3 @@
-# PacketCapture
-C# code for winPcap
-
 #SDL Network Interface
 	Proposal: SDL Network Interface
 	Authors: Varun Chari & Basavaraj Tonshal
