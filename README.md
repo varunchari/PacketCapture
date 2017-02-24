@@ -27,6 +27,6 @@ The main highlight of IVDCM is processing IP data requests directly from the SYN
 
 <img src="https://cloud.githubusercontent.com/assets/24734005/23311407/0b50fa42-fa84-11e6-8002-0d9ef62f9678.png" width="45%"></img>       <img src="https://cloud.githubusercontent.com/assets/24734005/23314862/a92b3f7c-fa91-11e6-887d-c3301584ec69.png" width="45%"></img> 
 
-
+Figure 1: NON-IP data processing                                          Figure 2: IP data processing 
 
 
