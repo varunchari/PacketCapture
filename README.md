@@ -25,7 +25,7 @@ The non-IP data processing is similar to using HTTP service, with only differenc
 The main highlight of IVDCM is processing IP data requests directly from the SYNC application. To achieve this IVDCM creates a virtual interface (SDL tunnel) on SYNC. Consider a Demo application as shown in Figure 2 is running on SYNC.
  It can directly write the IP data onto the virtual interface. IVDCM plugin reads the IP data using packet sniffer (libpcap) library. The data is sent to phone as a hybrid message, which is combination of JSON and Bulk Data. IVDCM running on phone processes the message and if it is IP data then IVDCM creates an IP packet. The application then simply has to create a TCP socket to send/receive data, thus enabling the application running on SYNC to process any IP data request (HTTP, MQTT etc.).
 
-![image](https://cloud.githubusercontent.com/assets/24734005/23311407/0b50fa42-fa84-11e6-8002-0d9ef62f9678.png)   		![image](https://cloud.githubusercontent.com/assets/24734005/23314862/a92b3f7c-fa91-11e6-887d-c3301584ec69.png)
+![image](https://cloud.githubusercontent.com/assets/24734005/23311407/0b50fa42-fa84-11e6-8002-0d9ef62f9678.png)                                      ![image](https://cloud.githubusercontent.com/assets/24734005/23314862/a92b3f7c-fa91-11e6-887d-c3301584ec69.png)
 Figure 1 : NON-IP data processing				Figure 2: IP data processing 
 
 
