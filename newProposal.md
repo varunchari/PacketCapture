@@ -7,11 +7,11 @@
 
 ##Introduction
 
-In-Vehicle Distributed Connectivity (IVDCM) allows In-vehicle applications on TCU and SYNC to receive/send data to cloud using desired networking intent. The intent can be either low level policy or high level intent. This proposal highlights how IVDCM on SYNC facilitates sending data using SYNC Wi-Fi and SDL. It allows exposing both SDL and Wi-Fi as network interfaces for the applications on SYNC, thus providing a central platform for managing connection interfaces on SYNC. This proposal highlights integration with SDL and not SYNC Wi-Fi
+In-Vehicle Distributed Connectivity (IVDCM) allows In-vehicle applications on Telematics Control Unit (TCU) and In-Vehicle Infotainment (IVI) to receive/send data to cloud using desired networking intent. The intent can be either low level policy or high level intent. This proposal highlights how IVDCM on IVI facilitates sending data using IVI Wi-Fi and SDL. It allows exposing both SDL and Wi-Fi as network interfaces for the applications on IVI, thus providing a central platform for managing connection interfaces on IVI. This proposal highlights integration with SDL and not IVI Wi-Fi
 
 ##Motivation
 
-Currently to upload or download, SDL enabled application on SYNC, utilizes application layer protocols like HTTP on the phone by sending SDL RPC messages. For example, if a SDL enabled application on SYNC needs to get some data from the cloud, the HTTP request is serialized into JSON and sent to the phone; phone then utilizes the HTTP service and makes a request to get the data. It is worth noting that, application on SYNC assumes the availability of HTTP service on the phone. Since HTTP is a basic service and is supported on all smartphones, this method works. Let’s assume that an application wants to do a MQTT request, unfortunately MQTT is not a universally supported service like HTTP and is not supported and thus we won’t be able to make the request. The primary motivation of this proposal is to make application on SYNC make IP data request through phone using SDL, thus becoming agnostic to application layer protocol support on the mobile.
+Currently to upload or download, SDL enabled application on IVI, utilizes application layer protocols like HTTP on the phone by sending SDL RPC messages. For example, if a SDL enabled application on IVI needs to get some data from the cloud, the HTTP request is serialized into JSON and sent to the phone; phone then utilizes the HTTP service and makes a request to get the data. It is worth noting that, application on IVI assumes the availability of HTTP service on the phone. Since HTTP is a basic service and is supported on all smartphones, this method works. Let’s assume that an application wants to do a MQTT request, unfortunately MQTT is not a universally supported service like HTTP and is not supported and thus we won’t be able to make the request. The primary motivation of this proposal is to make application on IVI make IP data request through phone using SDL, thus becoming agnostic to application layer protocol support on the mobile.
 
 ##Proposed solution
 
@@ -19,8 +19,7 @@ The solution detailed in this proposal will introduce IVDCM, which would be resp
 
 The non-IP data processing is similar to using HTTP service, with only difference being application requests are serialized to Google Protocol Buffer (GPB) by IVDCM for internal data processing.  For example Demo application in Figure 1 makes Get/Upload request to IVDCM. IVDCM converts the request into SDL RPC message and serialize it into GPB data. The serialized GPB data is then read by IVDCM plugin and sent to phone using JSON. The phone then completes the Get/Upload request using HTTP service.
 
-The main highlight of IVDCM is processing IP data requests directly from the SYNC application. To achieve this IVDCM creates a virtual interface (SDL tunnel) on SYNC. Consider a Demo application as shown in Figure 2 is running on SYNC.
- It can directly write the IP data onto the virtual interface. IVDCM plugin reads the IP data using packet sniffer (libpcap) library. The data is sent to phone as a hybrid message, which is combination of JSON and Bulk Data. IVDCM running on phone processes the message and if it is IP data then IVDCM creates an IP packet. The application then simply has to create a TCP socket to send/receive data, thus enabling the application running on SYNC to process any IP data request (HTTP, MQTT etc.). 
+The main highlight of IVDCM is processing IP data requests directly from the application on IVI. To achieve this IVDCM creates a virtual interface (SDL tunnel) on IVI. Consider a Demo application as shown in Figure 2 is running on IVI. It can directly write the IP data onto the virtual interface. IVDCM plugin reads the IP data using packet sniffer (libpcap) library. The data is sent to phone as a hybrid message, which is combination of JSON and Bulk Data. IVDCM running on phone processes the message and if it is IP data then IVDCM creates an IP packet. The application then simply has to create a TCP socket to send/receive data, thus enabling the application running on IVI to process any IP data request (HTTP, MQTT etc.). 
 
 <img src="https://cloud.githubusercontent.com/assets/24734005/23311407/0b50fa42-fa84-11e6-8002-0d9ef62f9678.png" width="45%"></img>       <img src="https://cloud.githubusercontent.com/assets/24734005/23314862/a92b3f7c-fa91-11e6-887d-c3301584ec69.png" width="45%"></img> 
 
@@ -43,7 +42,7 @@ Currently IVDCM SDL plugin supports two types of the communication with IVDCM an
 
 ####•	IP data handling.
 
-This is implemented using TUN device driver. TUN/TAP provides possibility to receive and transmit IP packets from user space programs. In order to use the driver a program has to open /dev/net/tun and issue a corresponding ioctl() to register a network device with the kernel.  A network device will appear as tunXX. We create sdltun0 on SYNC that represents SYNC. When the program closes the file descriptor, the network device and all corresponding routes will disappear. IVDCM SDL plugin receives IP packets from /dev/net/tun device, send them to the mobile application, receives response (using FORD mobile protocol) and writes them to the /dev/net/tun device. Figures 4 shows sequence diagrams for the example when a Demo application is making a Get/upload request for IP data to IVDCM and how IVDCM forwards this request to phone. Figure 5 shows the sequence of how the phone uses IVDCM to process this IP data request.
+This is implemented using TUN device driver. TUN/TAP provides possibility to receive and transmit IP packets from user space programs. In order to use the driver a program has to open /dev/net/tun and issue a corresponding ioctl() to register a network device with the kernel.  A network device will appear as tunXX. We create sdltun0 on IVI that represents IVI. When the program closes the file descriptor, the network device and all corresponding routes will disappear. IVDCM SDL plugin receives IP packets from /dev/net/tun device, send them to the mobile application, receives response (using FORD mobile protocol) and writes them to the /dev/net/tun device. Figures 4 shows sequence diagrams for the example when a Demo application is making a Get/upload request for IP data to IVDCM and how IVDCM forwards this request to phone. Figure 5 shows the sequence of how the phone uses IVDCM to process this IP data request.
 
 <img src="https://cloud.githubusercontent.com/assets/24734005/23314887/c72eb83c-fa91-11e6-8577-af1f70288121.png" width="90%"></img> 
 <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Figure5: Graphical Diagram of Get/upload using SDL IP</code>
@@ -61,7 +60,7 @@ It uses GPB protocol for communication with IVDCM. In this case IVDCM SDL acts a
 <img src="https://cloud.githubusercontent.com/assets/24734005/23314921/e09623dc-fa91-11e6-83c2-3f28a3506f2d.png" width="90%"></img> 
 <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Figure 8: Graphical Diagram of Mobile Application non IP data processing</code>
 
-####•	Application on SYNC:
+####•	Application on IVI:
 
 IVDCM provides notification regarding the status of the network interfaces to the application. The application can subscribe to these notifications. The following application shows how the application can subscribe to notifications and also IP and non-IP data handling using IVDCM APIs.
 
@@ -141,10 +140,10 @@ int main() {
   int rcv_input_value;
 
   do {
-    std::cout << "\n\nPress 1 to start download/upload using Sync SDL Virtual "
+    std::cout << "\n\nPress 1 to start download/upload using IVI SDL Virtual "
                  "Network" << std::endl;
     std::cout
-        << "Press 2 to start download/upload using Sync SDL GPB"
+        << "Press 2 to start download/upload using IVI SDL GPB"
         << std::endl;
     std::cout
         << "Press 3 to subscribe to network notification"
@@ -156,21 +155,21 @@ int main() {
     switch (rcv_input_value) {
      
       case 1: {
-        // Sync SDL to upload/download data
-        std::cout << "Press enter key to start download using Sync SDL "
+        // IVI SDL to upload/download data
+        std::cout << "Press enter key to start download using IVI SDL "
                      "Virtual Network" << std::endl;
         getchar();
 
         dcm_lib::Connection::RequestParams request_params;
         request_params.use_policy_ = true;
         request_params.low_level_policy_.priority_ = dcm_lib::HP;
-        request_params.low_level_policy_.physical_network_ = dcm_lib::SYNC_SDL;
+        request_params.low_level_policy_.physical_network_ = dcm_lib::IVI_SDL;
         std::string get_response = connection->Get(
             "http://104.41.144.152:3000/view/dl/install_log.txt",
             request_params);
         std::cout << "Response file path : " << get_response << std::endl;
 
-        std::cout << "Press enter key to start Sync SDL "
+        std::cout << "Press enter key to start IVI SDL "
                      "Virtual Network to upload" << std::endl;
         getchar();
 
@@ -186,8 +185,8 @@ int main() {
         break;
       }
       case 2: {
-        //Sync SDL GPB to upload/download data
-        std::cout << "Press enter key to start download using Sync SDL GPB "
+        //IVI SDL GPB to upload/download data
+        std::cout << "Press enter key to start download using IVI SDL GPB "
                      "" << std::endl;
         getchar();
 
@@ -195,12 +194,12 @@ int main() {
         request_params.use_policy_ = true;
         request_params.low_level_policy_.priority_ = dcm_lib::HP;
         request_params.low_level_policy_.physical_network_ =
-            dcm_lib::SYNC_SDL_GPB;
+            dcm_lib::IVI_SDL_GPB;
         std::string get_response = connection->Get(
             "http://104.41.144.152:3000/view/dl/test1.txt", request_params);
         std::cout << "Response file path : " << get_response << std::endl;
 
-        std::cout << "Press enter key to start Sync SDL GPB "
+        std::cout << "Press enter key to start IVI SDL GPB "
                      "to upload" << std::endl;
         getchar();
 
@@ -246,7 +245,7 @@ int main() {
 
 ####•	Application on Phone:
 
-IVDCM running on phone uses IVDCM processor component to process the messages received from SYNC. For example IVDCM processor processes ‘SendIVDCMData’ request received from SDL.  It then uploads/downloads data depending upon the type of request
+IVDCM running on phone uses IVDCM processor component to process the messages received from IVI. For example IVDCM processor processes ‘SendIVDCMData’ request received from SDL.  It then uploads/downloads data depending upon the type of request
 
 ```c++
 public class IVDCMProcessor {
